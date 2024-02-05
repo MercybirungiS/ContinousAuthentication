@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">BiometricApp</string>
+    <string name="continous_authentication_service">Continous Authentication Service</string>
+</resources>
