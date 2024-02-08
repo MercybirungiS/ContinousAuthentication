@@ -1,43 +1,44 @@
 package com.example.biometricapp.service
 
 import android.view.MotionEvent
-import android.view.View
 
 class TouchMetricsCollector {
 
-    fun calculateFingerPressure(event: MotionEvent): Float {
-        // Get pressure from the MotionEvent
-        return event.pressure
+    private var lastEvent: MotionEvent? = null
+
+    fun onEvent(event: MotionEvent) {
+        lastEvent = event
     }
 
-    fun calculateHoldTime(event: MotionEvent): Long {
-        // Get the time the event occurred
-        return event.eventTime - event.downTime
+    fun calculateFingerPressure(): Float {
+        lastEvent?.let {
+            // Get pressure from the stored MotionEvent
+            return it.pressure
+        }
+        return 0f // or handle the case where no event is available
     }
 
-    fun calculateFingerBlockedArea(event: MotionEvent): Float {
-
-
-        return event.size
+    fun calculateHoldTime(): Long {
+        lastEvent?.let {
+            // Get the time the event occurred
+            return it.eventTime - it.downTime
+        }
+        return 0L // or handle the case where no event is available
     }
 
-//    fun calculateFingerOrientation(event: MotionEvent, view: View): Float {
-//        val viewWidth = view.width.toFloat()
-//
-//        val orientationRatio = event.x / viewWidth
-//
-//        // Return the calculated ratio
-//        return orientationRatio
-//    }
-
-    fun calculateFingerOrientation(event: MotionEvent): Float {
-
-        val azimuth = event.getOrientation(0)
-
-        // Convert azimuth to degrees
-        return Math.toDegrees(azimuth.toDouble()).toFloat()
+    fun calculateFingerBlockedArea(): Float {
+        lastEvent?.let {
+            return it.size
+        }
+        return 0f
     }
 
-
-
+    fun calculateFingerOrientation(): Float {
+        lastEvent?.let {
+            val azimuth = it.getOrientation(0)
+            // Convert azimuth to degrees
+            return Math.toDegrees(azimuth.toDouble()).toFloat()
+        }
+        return 0f
+    }
 }

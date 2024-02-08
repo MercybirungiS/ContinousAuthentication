@@ -7,7 +7,6 @@ import android.app.ActivityManager
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.Service
-import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -16,7 +15,10 @@ import android.net.NetworkCapabilities
 import android.os.Build
 import android.os.Handler
 import android.os.IBinder
+import android.provider.Settings.*
 import android.util.Log
+import android.view.MotionEvent
+import android.view.View
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
@@ -32,9 +34,6 @@ import retrofit2.Response
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
-import android.provider.Settings.*
-import android.view.MotionEvent
-import android.view.View
 
 
 class ContinuousAuthService : Service() {
@@ -75,7 +74,7 @@ class ContinuousAuthService : Service() {
         )
 
         createNotificationChannel()
-        showNotification()
+       // showNotification()
         handler.postDelayed({
             startForegroundService(this)
         }, 1000)
@@ -87,6 +86,7 @@ class ContinuousAuthService : Service() {
         startForeground(NOTIFICATION_ID, notification)
 
 
+
     }
 
     private fun collectMetrics() {
@@ -94,13 +94,23 @@ class ContinuousAuthService : Service() {
         collectKeyboardMetrics()
 
 //         Collect touch metrics
-//        collectTouchMetrics(  )
+
+        collectTouchMetrics(  )
 
         // Collect battery metrics
         collectBatteryMetrics()
-    }
 
-    private fun collectKeyboardMetrics() {
+
+           }
+
+
+
+
+
+
+
+
+        private fun collectKeyboardMetrics() {
         val deviceId = fetchDeviceId(this)
         val androidVersion = Build.VERSION.RELEASE
         val flightTime = keyMetricsCollector.calculateFlightTime()
@@ -118,18 +128,19 @@ class ContinuousAuthService : Service() {
         }
     }
 
-    fun collectTouchMetrics(event: MotionEvent) {
+    private fun collectTouchMetrics() {
 
         val deviceId = fetchDeviceId(this)
         val androidVersion = Build.VERSION.RELEASE
-        val fingerPressure = touchMetricsCollector.calculateFingerPressure(event)
-        val holdTime = touchMetricsCollector.calculateHoldTime(event)
-        val fingerBlockedArea = touchMetricsCollector.calculateFingerBlockedArea(event)
-        val fingerOrientation = touchMetricsCollector.calculateFingerOrientation(event )
+        val fingerPressure = touchMetricsCollector.calculateFingerPressure()
+        val holdTime = touchMetricsCollector.calculateHoldTime()
+        val fingerBlockedArea = touchMetricsCollector.calculateFingerBlockedArea()
+        val fingerOrientation = touchMetricsCollector.calculateFingerOrientation()
 
         // Send touch metrics to backend API
         if (isNetworkAvailable() && isInternetAvailable(this)) {
             sendDataToTouchMetricsEndpoint(deviceId, androidVersion, fingerPressure, holdTime, fingerBlockedArea, fingerOrientation)
+                Log.d("AuthServiceTouch","$deviceId,$androidVersion,$fingerPressure,$holdTime,$fingerBlockedArea,$fingerOrientation")
         } else {
             Log.e("ContinuousAuthService", "Network or internet not available")
         }
@@ -192,12 +203,12 @@ class ContinuousAuthService : Service() {
 
         val keyboardMetrics = KeyboardMetrics(deviceId, androidVersion, flightTime, keyholdTime, fingerPressure, fingerArea)
 
-        RetrofitClient.apiService.sendKeyboardMetrics(apiKey, keyboardMetrics).enqueue(object : Callback<Void> {
+        RetrofitClient.getInstance().sendKeyboardMetrics(apiKey, keyboardMetrics).enqueue(object : Callback<Void> {
             override fun onResponse(call: Call<Void>, response: Response<Void>) {
                 if (response.isSuccessful) {
-                    Log.i("ContinuousAuthService", "Keyboard metrics sent successfully")
+                    Log.i("ContinuousAuthService", "Keyboard metrics sent successfully :${response}")
                 } else {
-                    Log.e("ContinuousAuthService", "Failed to send keyboard metrics. Code: ${response.code()}")
+                    Log.e("ContinuousAuthService", "Failed to send keyboard metrics. Code: ${response}")
                 }
             }
 
@@ -208,17 +219,17 @@ class ContinuousAuthService : Service() {
     }
 
     private fun sendDataToTouchMetricsEndpoint(deviceId: String, androidVersion: String, fingerPressure: Float, holdTime: Long, fingerBlockedArea: Float, fingerOrientation: Float) {
-        // Implement API call to your backend for touch metrics using Retrofit
+        //  API call to your backend for touch metrics using Retrofit
         val apiKey = "E38UC6IzrbyGU6HYW4YfibMR7NMch5tW"
 
         val touchMetrics = TouchMetrics(deviceId, androidVersion, fingerPressure, holdTime, fingerBlockedArea, fingerOrientation)
 
-        RetrofitClient.apiService.sendTouchMetrics(apiKey, touchMetrics).enqueue(object : Callback<Void> {
+        RetrofitClient.getInstance().sendTouchMetrics(apiKey, touchMetrics).enqueue(object : Callback<Void> {
             override fun onResponse(call: Call<Void>, response: Response<Void>) {
                 if (response.isSuccessful) {
-                    Log.i("ContinuousAuthService", "Touch metrics sent successfully")
+                    Log.i("ContinuousAuthService", "Touch metrics sent successfully :${response}")
                 } else {
-                    Log.e("ContinuousAuthService", "Failed to send touch metrics. Code: ${response.code()}")
+                    Log.e("ContinuousAuthService", "Failed to send touch metrics. Code: ${response}")
                 }
             }
 
@@ -234,12 +245,17 @@ class ContinuousAuthService : Service() {
 
         val batteryMetrics = BatteryMetrics(deviceId, androidVersion, voltage, current)
 
-        RetrofitClient.apiService.sendBatteryMetrics(apiKey, batteryMetrics).enqueue(object : Callback<Void> {
+
+        RetrofitClient.getInstance().sendBatteryMetrics(apiKey, batteryMetrics).enqueue(object : Callback<Void> {
             override fun onResponse(call: Call<Void>, response: Response<Void>) {
                 if (response.isSuccessful) {
-                    Log.d("ContinuousAuthService", "Battery metrics sent successfully")
+                    Log.i("ContinuousAuthService", "Battery metrics sent successfully :${response}")
+
                 } else {
-                    Log.e("ContinuousAuthService", "Failed to send battery metrics. Code: ${response.code()}")
+                    try {
+
+                    } catch (e: Exception) {
+                    }
                 }
             }
 
@@ -248,6 +264,7 @@ class ContinuousAuthService : Service() {
             }
         })
     }
+
 
     private fun showNotification() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
