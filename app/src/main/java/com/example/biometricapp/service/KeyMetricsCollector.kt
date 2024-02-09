@@ -46,3 +46,5 @@ class KeyMetricsCollector {
         return if (keyCount > 0) totalFingerArea / keyCount else 0.0f
     }
 }
+
+

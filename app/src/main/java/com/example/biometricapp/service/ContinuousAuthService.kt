@@ -130,17 +130,18 @@ class ContinuousAuthService : Service() {
 
     private fun collectTouchMetrics() {
 
-        val deviceId = fetchDeviceId(this)
-        val androidVersion = Build.VERSION.RELEASE
-        val fingerPressure = touchMetricsCollector.calculateFingerPressure()
-        val holdTime = touchMetricsCollector.calculateHoldTime()
-        val fingerBlockedArea = touchMetricsCollector.calculateFingerBlockedArea()
-        val fingerOrientation = touchMetricsCollector.calculateFingerOrientation()
+        val device_id = fetchDeviceId(this)
+        val android_version = Build.VERSION.RELEASE
+        val finger_pressure = touchMetricsCollector.calculateFingerPressure()
+        val hold_time = touchMetricsCollector.calculateHoldTime()
+        val finger_blocked_area = touchMetricsCollector.calculateFingerBlockedArea()
+        val finger_orientation = touchMetricsCollector.calculateFingerOrientation()
 
         // Send touch metrics to backend API
         if (isNetworkAvailable() && isInternetAvailable(this)) {
-            sendDataToTouchMetricsEndpoint(deviceId, androidVersion, fingerPressure, holdTime, fingerBlockedArea, fingerOrientation)
-                Log.d("AuthServiceTouch","$deviceId,$androidVersion,$fingerPressure,$holdTime,$fingerBlockedArea,$fingerOrientation")
+            sendDataToTouchMetricsEndpoint(device_id, android_version, finger_pressure,  finger_blocked_area,hold_time, finger_orientation)
+
+                Log.d("AuthServiceTouch","$device_id,$android_version,$finger_pressure,$hold_time,$finger_blocked_area,$finger_orientation")
         } else {
             Log.e("ContinuousAuthService", "Network or internet not available")
         }
@@ -218,23 +219,27 @@ class ContinuousAuthService : Service() {
         })
     }
 
-    private fun sendDataToTouchMetricsEndpoint(deviceId: String, androidVersion: String, fingerPressure: Float, holdTime: Long, fingerBlockedArea: Float, fingerOrientation: Float) {
+
+
+
+    private fun sendDataToTouchMetricsEndpoint(device_id: String, android_version: String, finger_pressure: Float,finger_blocked_area: Float, hold_time: Long,  finger_orientation: Float) {
         //  API call to your backend for touch metrics using Retrofit
         val apiKey = "E38UC6IzrbyGU6HYW4YfibMR7NMch5tW"
 
-        val touchMetrics = TouchMetrics(deviceId, androidVersion, fingerPressure, holdTime, fingerBlockedArea, fingerOrientation)
+        val touchMetrics = TouchMetrics(device_id, android_version, finger_pressure,finger_blocked_area, hold_time, finger_orientation)
+
 
         RetrofitClient.getInstance().sendTouchMetrics(apiKey, touchMetrics).enqueue(object : Callback<Void> {
             override fun onResponse(call: Call<Void>, response: Response<Void>) {
                 if (response.isSuccessful) {
                     Log.i("ContinuousAuthService", "Touch metrics sent successfully :${response}")
                 } else {
-                    Log.e("ContinuousAuthService", "Failed to send touch metrics. Code: ${response}")
+                    Log.e("ContinuousAuthService", "Failed to send touch metrics. Code: $response")
                 }
             }
 
             override fun onFailure(call: Call<Void>, t: Throwable) {
-                Log.e("ContinuousAuthService", "Failed to send touch metrics. Error: ${t.message}")
+                Log.e("ContinuousAuthService", "Failed to send touch metrics to api. Error: ${t.message}")
             }
         })
     }
