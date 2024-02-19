@@ -19,7 +19,6 @@ interface ApiService {
         @Body keyboardMetrics: KeyboardMetrics
     ): Call<Void>
 
-
     @Headers("Content-Type:application/json")
     @POST("/api/touch-dynamics/create")
     fun sendTouchMetrics(

@@ -5,6 +5,6 @@ data class TouchMetrics(
     val android_version: String,
     val finger_pressure: Float,
     val finger_blocked_area: Float,
-    val hold_time: Long,
-    val finger_orientation: Float,
+    val hold_time: Float,
+    val finger_orientation: String,
 )

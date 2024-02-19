@@ -9,12 +9,14 @@ import android.Manifest
 import android.content.Intent
 import android.util.Log
 import android.view.MotionEvent
+import android.view.View
 import com.example.biometricapp.service.ContinuousAuthService
 import com.example.biometricapp.service.TouchMetricsCollector
 
 class MainActivity : AppCompatActivity() {
 
     private val INTERNET_PERMISSION_CODE = 123
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -24,7 +26,19 @@ class MainActivity : AppCompatActivity() {
 
         // Check for internet permission and start the service accordingly
         checkInternetPermission()
+
+        // Set up touch listener on root view
+
+
+
     }
+
+//    override fun onTouchEvent(event: MotionEvent): Boolean {
+//        // Pass the touch event to the TouchMetricsCollector
+//        val touchMetricsCollector =TouchMetricsCollector()
+//        touchMetricsCollector.onEvent(event)
+//        return super.onTouchEvent(event)
+//    }
 
     private fun startContinuousAuthService() {
 
@@ -32,12 +46,7 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-    override fun onTouchEvent(event: MotionEvent): Boolean {
-        // Pass the touch event to the TouchMetricsCollector
-        val touchMetricsCollector =TouchMetricsCollector()
-        touchMetricsCollector.onEvent(event)
-        return super.onTouchEvent(event)
-    }
+
 
 
     private fun checkInternetPermission() {
