@@ -20,6 +20,7 @@ import android.os.Handler
 import android.os.IBinder
 import android.provider.Settings.*
 import android.util.Log
+import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
@@ -45,7 +46,6 @@ import java.io.IOException
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
-import java.util.logging.Logger
 
 
 class ContinuousAuthService : Service() {
@@ -132,28 +132,30 @@ class ContinuousAuthService : Service() {
 
     private fun showOverlayView() {
         val params = WindowManager.LayoutParams(
-            WindowManager.LayoutParams.MATCH_PARENT,
-            WindowManager.LayoutParams.MATCH_PARENT,
+            WindowManager.LayoutParams.WRAP_CONTENT,
+            WindowManager.LayoutParams.WRAP_CONTENT,
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
             WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
                     or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
                     or WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
             PixelFormat.TRANSLUCENT
         )
+        params.gravity = Gravity.BOTTOM
 
         windowManager = getSystemService(Context.WINDOW_SERVICE) as WindowManager
-        overlayView = LayoutInflater.from(this).inflate(R.layout.activity_main, null)
+        overlayView = LayoutInflater.from(this).inflate(R.layout.overlay_view, null)
         windowManager.addView(overlayView, params)
 
         overlayView.setOnTouchListener { _, event ->
             processTouchEvent(event)
+            collectKeyboardMetrics(event)
             true
         }
     }
 
     private fun collectMetrics() {
         // Collect keyboard metrics
-        collectKeyboardMetrics()
+//        collectKeyboardMetrics()
 
 //         Collect touch metrics
 
@@ -162,21 +164,13 @@ class ContinuousAuthService : Service() {
         // Collect battery metrics
         collectBatteryMetrics()
 
-
     }
 
-
-
-
-
-
-
-
-    private fun collectKeyboardMetrics() {
+    private fun collectKeyboardMetrics(event: MotionEvent) {
         val deviceId = fetchDeviceId(this)
         val androidVersion = Build.VERSION.RELEASE
-        val flightTime = keyMetricsCollector.calculateFlightTime()
-        val keyholdTime = keyMetricsCollector.calculateKeyholdTime()
+        val flightTime = keyMetricsCollector.calculateFlightTime(event)
+        val keyholdTime = keyMetricsCollector.calculateKeyholdTime(event)
         val fingerPressure = keyMetricsCollector.calculateAverageFingerPressure()
         val fingerArea = keyMetricsCollector.calculateAverageFingerArea()
 
@@ -217,7 +211,7 @@ class ContinuousAuthService : Service() {
         val deviceId = fetchDeviceId(this)
         val androidVersion = Build.VERSION.RELEASE
         val voltage = batteryMetricsCollector.calculateVoltage()
-        val current = batteryMetricsCollector.calculateCurrent()
+        val current = batteryMetricsCollector.calculateCurrent(this)
 
         // Send battery metrics to backend API
         if (isNetworkAvailable() && isInternetAvailable(this )) {
@@ -263,7 +257,7 @@ class ContinuousAuthService : Service() {
         }
     }
 
-    private fun sendDataToKeyboardMetricsEndpoint(deviceId: String, androidVersion: String, flightTime: Long, keyholdTime: Long, fingerPressure: Float, fingerArea: Float) {
+    private fun sendDataToKeyboardMetricsEndpoint(deviceId: String, androidVersion: String, flightTime: Float, keyholdTime: Float, fingerPressure: Float, fingerArea: Float) {
         // Implement API call to your backend for keyboard metrics using Retrofit
 
         val keyboardMetrics = KeyboardMetrics(deviceId, androidVersion, flightTime, keyholdTime, fingerPressure, fingerArea)
@@ -407,9 +401,6 @@ class ContinuousAuthService : Service() {
         executorService.cancel(true)
     }
 
-
-
-
     companion object {
         fun startService(context: Context) {
             val serviceIntent = Intent(context, ContinuousAuthService::class.java)
@@ -421,12 +412,10 @@ class ContinuousAuthService : Service() {
             val serviceIntent = Intent(context, ContinuousAuthService::class.java)
             ContextCompat.startForegroundService(context, serviceIntent)
         }
-
         fun stopService(context: Context) {
             val serviceIntent = Intent(context, ContinuousAuthService::class.java)
             context.stopService(serviceIntent)
         }
-
         @SuppressLint("ServiceCast")
         fun isServiceRunning(context: Context, java: Class<ContinuousAuthService>): Boolean {
             val manager = context.getSystemService(Context.ACTIVITY_SERVICE) as? ActivityManager
@@ -440,8 +429,4 @@ class ContinuousAuthService : Service() {
             return false
         }
     }
-
-
-
-
 }

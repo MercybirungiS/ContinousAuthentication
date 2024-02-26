@@ -14,18 +14,25 @@ class BatteryMetricsCollector(private val context: Context) {
         return voltage / 1000.0f // Convert mV to V
     }
 
-    @Suppress("DEPRECATION")
-    fun calculateCurrent(): Float {
-        val batteryIntent = getBatteryIntent()
+//    @Suppress("DEPRECATION")
+//    fun calculateCurrent(): Float {
+//        val batteryIntent = getBatteryIntent()
+//
+//        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+//            val current = batteryIntent.getIntExtra(BatteryManager.BATTERY_PROPERTY_CURRENT_NOW.toString(), -1)
+//            current / 1000.0f // Convert µA to mA
+//        } else {
+//            // For Android versions below 21, you can choose an alternative approach
+//            // or set it to a default value based on your requirements
+//            -1.0f
+//        }
+//    }
 
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            val current = batteryIntent.getIntExtra(BatteryManager.BATTERY_PROPERTY_CURRENT_NOW.toString(), -1)
-            current / 1000.0f // Convert µA to mA
-        } else {
-            // For Android versions below 21, you can choose an alternative approach
-            // or set it to a default value based on your requirements
-            -1.0f
-        }
+
+    fun calculateCurrent(context: Context): Float {
+        val batteryManager = context.getSystemService(Context.BATTERY_SERVICE) as BatteryManager
+        val currentMicroAmperes = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CURRENT_NOW)
+        return currentMicroAmperes / 1000.0f // Convert microamperes to milliamperes
     }
 
     private fun getBatteryIntent(): Intent {

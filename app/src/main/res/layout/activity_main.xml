@@ -9,8 +9,8 @@
     tools:context=".MainActivity">
 
     <TextView
-        android:layout_width="222dp"
-        android:layout_height="100dp"
+        android:layout_width="231dp"
+        android:layout_height="54dp"
         android:autoSizeTextType="none"
         android:autoText="false"
         android:text="@string/continous_authentication_service"
