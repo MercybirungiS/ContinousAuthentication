@@ -12,11 +12,11 @@ class KeyMetricsCollector {
 
 
     fun calculateFlightTime(event: MotionEvent): Float {
-        return event.touchMajor
+        return event.touchMajor/0.2f
     }
 
     fun calculateKeyholdTime(event: MotionEvent): Float {
-        return (event.eventTime - event.downTime).toFloat()
+        return event.touchMajor/0.4f
 
     }
 

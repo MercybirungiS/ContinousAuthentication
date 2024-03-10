@@ -4,6 +4,7 @@ import android.view.MotionEvent
 import java.lang.Math.PI
 import java.lang.Math.atan2
 import java.lang.Math.toDegrees
+import kotlin.random.Random
 
 class TouchMetricsCollector {
 
@@ -16,50 +17,56 @@ class TouchMetricsCollector {
     private val AREA_THRESHOLD = 0.0f // Adjust this value
     private val MOVEMENT_THRESHOLD = 0f // Adjust this value
 
+//    fun calculateFingerPressure(event: MotionEvent): Float {
+//    return event.getPressure()
+//    }
+
+
+//    fun calculateFingerPressure(event: MotionEvent): Float {
+//        val basePressure = Random.nextDouble(0.0, 1.0) // Include 0, but not 1.0
+//        val variation = Random.nextDouble(0.0, 0.1)   // Smaller positive-only variation
+//
+//        var simulatedPressure = basePressure + variation
+//
+//        // Ensure the pressure stays within the 0 to 1.0 range
+//        simulatedPressure = simulatedPressure.coerceAtLeast(0.0) // Ensure no negativity
+//        simulatedPressure = simulatedPressure.coerceAtMost(1.0)
+//
+//        return simulatedPressure.toFloat()
+//    }
+
+
+
+    private var previousSimulatedPressure = 0.5f // Start with a middle-range pressure
+
     fun calculateFingerPressure(event: MotionEvent): Float {
-        when (event.action) {
-            MotionEvent.ACTION_DOWN -> {
-                baselineArea = event.size
-                pressureScore = 0f // Reset score
-                lastX = event.x
-                lastY = event.y
-            }
-            MotionEvent.ACTION_MOVE -> {
-                val areaDifference = event.size - baselineArea
-                if (areaDifference > AREA_THRESHOLD) {
-                    pressureScore += 1f
-                }
+        // ... (Your existing logic for base pressure and variation) ...
 
-                val deltaX = event.x - lastX
-                val deltaY = event.y - lastY
-                val movementMagnitude = deltaX * deltaX + deltaY * deltaY
+        // Calculate Pressure Change
+        val pressureChangeMagnitude = Random.nextDouble(0.05, 1.0) // Adjust range as needed
+        val pressureChangeDirection = if (Random.nextBoolean()) 1 else -1
+        val pressureChange = pressureChangeMagnitude * pressureChangeDirection
 
-                if (movementMagnitude > MOVEMENT_THRESHOLD) {
-                    pressureScore += 0.5f // Adjust weight as needed
-                }
+        // Apply Change and Clamp
+        var simulatedPressure = previousSimulatedPressure + pressureChange
+        simulatedPressure = simulatedPressure.coerceAtLeast(0.0)
+        simulatedPressure = simulatedPressure.coerceAtMost(1.0)
 
-                lastX = event.x
-                lastY = event.y
-            }
-        }
-        return pressureScore
+        previousSimulatedPressure = simulatedPressure.toFloat() // Store for the next calculation
+
+        return simulatedPressure.toFloat()
     }
 
+
+
+    //  ... (Constants and Variables from the previous complete algorithm) ...
+
+
+
+
     fun calculateHoldTime(event: MotionEvent): Float {
-        val pointerCount = event.pointerCount
-        var maxHoldTime = 0L
+        return event.touchMajor/0.4f
 
-        for (i in 0 until pointerCount) {
-            val downTime = event.getDownTime()
-            val eventTime = event.eventTime
-            val holdTime = eventTime - downTime
-
-            if (holdTime > maxHoldTime) {
-                maxHoldTime = holdTime
-            }
-        }
-
-        return maxHoldTime.toFloat()
     }
 
 
@@ -82,6 +89,7 @@ class TouchMetricsCollector {
 
     fun Double.toDegrees(): Double {
         return this * 180.0 / PI
+
     }
 
 

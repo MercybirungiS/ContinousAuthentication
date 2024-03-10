@@ -143,7 +143,7 @@ class ContinuousAuthService : Service() {
         params.gravity = Gravity.BOTTOM
 
         windowManager = getSystemService(Context.WINDOW_SERVICE) as WindowManager
-        overlayView = LayoutInflater.from(this).inflate(R.layout.overlay_view, null)
+        overlayView = LayoutInflater.from(this).inflate(R.layout.activity_main, null)
         windowManager.addView(overlayView, params)
 
         overlayView.setOnTouchListener { _, event ->
